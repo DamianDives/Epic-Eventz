@@ -1,0 +1,73 @@
+<template>
+    <lightning-card title="Budget Approval Manager" icon-name="standard:approval">
+        
+        <!-- Tab Navigation -->
+        <div class="slds-p-around_medium">
+            <lightning-tabset>
+                <!-- Submit Tab -->
+                <lightning-tab label="Submit for Approval">
+                    <div class="slds-p-around_small">
+                        <template if:true={draftEvents}>
+                            <lightning-datatable
+                                key-field="Id"
+                                data={draftEvents}
+                                columns={submitColumns}
+                                onrowaction={handleSubmitAction}
+                                hide-checkbox-column>
+                            </lightning-datatable>
+                        </template>
+                        <template if:false={draftEvents}>
+                            <p class="slds-text-body_regular slds-align_absolute-center">No draft events to submit.</p>
+                        </template>
+                    </div>
+                </lightning-tab>
+                
+                <!-- Approve/Reject Tab -->
+                <lightning-tab label="Pending Approvals">
+                    <div class="slds-p-around_small">
+                        <template if:true={pendingEvents}>
+                            <lightning-datatable
+                                key-field="Id"
+                                data={pendingEvents}
+                                columns={approvalColumns}
+                                onrowaction={handleApprovalAction}
+                                hide-checkbox-column>
+                            </lightning-datatable>
+                        </template>
+                        <template if:false={pendingEvents}>
+                            <p class="slds-text-body_regular slds-align_absolute-center">No events pending approval.</p>
+                        </template>
+                    </div>
+                </lightning-tab>
+            </lightning-tabset>
+        </div>
+        
+        <!-- Modal -->
+        <template if:true={showModal}>
+            <section class="slds-modal slds-fade-in-open" aria-modal="true" role="dialog">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={closeModal}>
+                            <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
+                        </button>
+                        <h2 class="slds-text-heading_medium">{modalTitle}</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <dl class="slds-dl_horizontal slds-m-bottom_medium">
+                            <dt class="slds-dl_horizontal__label">Event:</dt>
+                            <dd class="slds-dl_horizontal__detail">{selectedEventName}</dd>
+                            <dt class="slds-dl_horizontal__label">Budget:</dt>
+                            <dd class="slds-dl_horizontal__detail">{selectedEventBudget}</dd>
+                        </dl>
+                        <lightning-textarea label="Comments" value={comments} onchange={handleCommentsChange}></lightning-textarea>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button label="Cancel" onclick={closeModal} class="slds-m-right_small"></lightning-button>
+                        <lightning-button label={modalActionLabel} variant={modalVariant} onclick={handleConfirmAction}></lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </lightning-card>
+</template>

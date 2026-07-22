@@ -1,0 +1,25 @@
+.event-card {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.event-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.event-card.selected {
+    border-color: #0176d3;
+    box-shadow: 0 0 0 1px #0176d3;
+}
+
+.slds-theme_success {
+    background-color: #2e844a;
+    color: white;
+}
+
+.slds-theme_error {
+    background-color: #ba0517;
+    color: white;
+}
