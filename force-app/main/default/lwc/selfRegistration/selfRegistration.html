@@ -1,0 +1,92 @@
+<template>
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1 class="auth-logo">EpicEventz</h1>
+                <p class="auth-tagline">{headerSubtext}</p>
+            </div>
+
+            <!-- Login Form -->
+            <template if:true={isLoginMode}>
+                <div class="auth-form">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" value={email}
+                               onchange={handleEmailChange} placeholder="you@email.com"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" value={password}
+                               onchange={handlePasswordChange} placeholder="••••••••"/>
+                    </div>
+                    <button class="btn btn-primary btn-full" onclick={handleLogin}
+                            disabled={isLoading}>
+                        <template if:true={isLoading}>Logging in...</template>
+                        <template if:false={isLoading}>Log In</template>
+                    </button>
+                    <p class="auth-switch">
+                        Don't have an account?
+                        <a class="auth-link" onclick={switchToSignup}>Sign Up</a>
+                    </p>
+                </div>
+            </template>
+
+            <!-- Signup Form -->
+            <template if:true={isSignupMode}>
+                <div class="auth-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-input" value={firstName}
+                                   onchange={handleFirstNameChange} placeholder="John"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-input" value={lastName}
+                                   onchange={handleLastNameChange} placeholder="Doe"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" value={email}
+                               onchange={handleEmailChange} placeholder="you@email.com"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password (min 8 characters)</label>
+                        <input type="password" class="form-input" value={password}
+                               onchange={handlePasswordChange} placeholder="••••••••"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" class="form-input" value={confirmPassword}
+                               onchange={handleConfirmPasswordChange} placeholder="••••••••"/>
+                    </div>
+                    <button class="btn btn-primary btn-full" onclick={handleSignup}
+                            disabled={isLoading}>
+                        <template if:true={isLoading}>Creating Account...</template>
+                        <template if:false={isLoading}>Create Account</template>
+                    </button>
+                    <p class="auth-switch">
+                        Already have an account?
+                        <a class="auth-link" onclick={switchToLogin}>Log In</a>
+                    </p>
+                </div>
+            </template>
+
+            <!-- Success Message -->
+            <template if:true={showSuccess}>
+                <div class="success-box">
+                    <span class="success-icon">✓</span>
+                    <p>{successMessage}</p>
+                </div>
+            </template>
+
+            <!-- Error Message -->
+            <template if:true={showError}>
+                <div class="error-box">
+                    <p>{errorMessage}</p>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>
