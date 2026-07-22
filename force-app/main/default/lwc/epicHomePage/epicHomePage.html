@@ -1,154 +1,119 @@
 <template>
-    <!-- HERO SECTION -->
-    <div class="hero-section">
-        <div class="hero-overlay"></div>
-        <div class="floating-orbs">
-            <div class="orb orb-1"></div>
-            <div class="orb orb-2"></div>
-            <div class="orb orb-3"></div>
-            <div class="orb orb-4"></div>
-            <div class="orb orb-5"></div>
-            <div class="orb orb-6"></div>
-        </div>
-        <div class="hero-content">
-            <h1 class="hero-title">
-                <span class="title-epic">Epic</span><span class="title-eventz">Eventz</span>
-            </h1>
-            <p class="hero-tagline">Bookings handled, stress cancelled.</p>
-            <div class="hero-buttons">
-                <button class="btn-cta btn-primary" onclick={scrollToEvents}>
-                    Browse Events →
-                </button>
-                <button class="btn-cta btn-outline" onclick={goToLogin}>
-                    Sign In
-                </button>
+    <div class="page">
+        <!-- STICKY NAV -->
+        <nav class="navbar">
+            <span class="nav-logo">EE<span class="nav-dot">.</span></span>
+            <div class="nav-links">
+                <span class="nav-link" onclick={scrollToEvents}>Events</span>
+                <span class="nav-link" onclick={scrollToAbout}>About</span>
             </div>
-        </div>
-    </div>
+            <button class="nav-signin" onclick={goToLogin}>Member Login</button>
+        </nav>
 
-    <!-- WHY SECTION -->
-    <div class="why-section">
-        <h2 class="section-heading">Why <span class="highlight">EpicEventz</span>?</h2>
-        <p class="section-sub">Everything you need to create unforgettable experiences</p>
-        <div class="features-grid">
-            <div class="feature-card">
-                <span class="feature-icon">🎪</span>
-                <h3>Seamless Bookings</h3>
-                <p>From event selection to confirmation — one smooth flow. No spreadsheets, no chaos.</p>
+        <!-- SPLIT HERO -->
+        <div class="hero">
+            <div class="hero-left">
+                <span class="hero-kicker">EVENT MANAGEMENT, SIMPLIFIED</span>
+                <h1 class="hero-headline">
+                    Find it.<br/>
+                    Book it.<br/>
+                    <span class="hero-underline">Show up.</span>
+                </h1>
+                <p class="hero-copy">
+                    No spreadsheets. No confusion. Just a clean way to
+                    discover events and lock in your spot.
+                </p>
+                <button class="btn-coral" onclick={scrollToEvents}>See what's on →</button>
             </div>
-            <div class="feature-card">
-                <span class="feature-icon">🔒</span>
-                <h3>Smart Capacity</h3>
-                <p>Automatic waitlisting when events fill up. Instant promotion when spots open.</p>
-            </div>
-            <div class="feature-card">
-                <span class="feature-icon">📊</span>
-                <h3>Real-Time Tracking</h3>
-                <p>Live registration counts, revenue rollups, and attendance tracking — all automatic.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- EVENTS CAROUSEL SECTION -->
-    <div class="events-section" data-id="events-section">
-        <h2 class="events-heading">
-            Upcoming <span class="highlight">Events</span>
-        </h2>
-
-        <template if:true={hasEvents}>
-            <div class="carousel-container">
-                <button class="carousel-btn carousel-prev" onclick={prevEvent}>←</button>
-                <div class="carousel-track">
-                    <div class="event-slide">
-                        <div class="slide-image">
-                            <span class="slide-type-badge">{currentEvent.Event_Type__c}</span>
-                        </div>
-                        <div class="slide-content">
-                            <h3 class="slide-title">{currentEvent.Name}</h3>
-                            <p class="slide-meta">📅 {currentEvent.formattedDate}</p>
-                            <p class="slide-meta">📍 {currentEvent.venueName}</p>
-                            <div class="slide-footer">
-                                <span class="slide-seats">{currentEvent.seatsInfo}</span>
-                                <button class="btn-view-event" onclick={handleViewEvent}>
-                                    View Event →
-                                </button>
-                            </div>
-                        </div>
+            <div class="hero-right">
+                <template if:true={heroPreview}>
+                    <div class="stack-card stack-card-1">
+                        <span class="stack-tag">{heroPreview.Event_Type__c}</span>
+                        <h4>{heroPreview.Name}</h4>
+                        <p>{heroPreview.venueName}</p>
                     </div>
-                </div>
-                <button class="carousel-btn carousel-next" onclick={nextEvent}>→</button>
-            </div>
-            <div class="carousel-dots">
-                <template for:each={events} for:item="evt" for:index="idx">
-                    <span key={evt.Id} class={evt.dotClass}
-                          data-index={idx} onclick={goToEvent}></span>
                 </template>
+                <div class="stack-card stack-card-2"></div>
+                <div class="stack-card stack-card-3"></div>
             </div>
-        </template>
+        </div>
 
-        <template if:false={hasEvents}>
-            <p class="no-events">No upcoming events yet. Check back soon!</p>
-        </template>
-    </div>
+        <!-- STATS STRIP -->
+        <div class="stats-strip">
+            <div class="stat"><strong>{eventCount}</strong><span>Live Events</span></div>
+            <div class="stat-divider"></div>
+            <div class="stat"><strong>Instant</strong><span>Confirmation</span></div>
+            <div class="stat-divider"></div>
+            <div class="stat"><strong>Auto</strong><span>Waitlisting</span></div>
+        </div>
 
-    <!-- HOW IT WORKS -->
-    <div class="how-section">
-        <h2 class="section-heading">How It <span class="highlight">Works</span></h2>
-        <div class="steps">
-            <div class="step-item">
-                <span class="step-num">1</span>
-                <div>
-                    <h4>Browse Events</h4>
-                    <p>Explore upcoming events with dates, venues, and availability.</p>
+        <!-- EVENTS: FILTERABLE GRID -->
+        <div class="events-block" data-id="events-anchor">
+            <div class="events-block-head">
+                <h2>What's <em>on</em></h2>
+                <div class="filter-chips">
+                    <template for:each={typeFilters} for:item="f">
+                        <span key={f.value} class={f.chipClass}
+                              data-value={f.value} onclick={handleFilterClick}>
+                            {f.label}
+                        </span>
+                    </template>
                 </div>
             </div>
-            <div class="step-item">
-                <span class="step-num">2</span>
-                <div>
-                    <h4>Create Your Account</h4>
-                    <p>Quick signup — just name, email, and password.</p>
+
+            <template if:true={hasFilteredEvents}>
+                <div class="masonry">
+                    <template for:each={filteredEvents} for:item="evt">
+                        <article key={evt.Id} class="event-tile" data-id={evt.Id}
+                                 onclick={handleEventTileClick}>
+                            <div class="tile-top">
+                                <span class="tile-type">{evt.Event_Type__c}</span>
+                                <span class="tile-seats">{evt.seatsInfo}</span>
+                            </div>
+                            <h3 class="tile-name">{evt.Name}</h3>
+                            <p class="tile-date">{evt.formattedDate}</p>
+                            <p class="tile-venue">{evt.venueName}</p>
+                            <span class="tile-cta">Lock in a spot ↗</span>
+                        </article>
+                    </template>
                 </div>
-            </div>
-            <div class="step-item">
-                <span class="step-num">3</span>
-                <div>
-                    <h4>Register Instantly</h4>
-                    <p>One-click registration with automatic confirmation or waitlisting.</p>
+            </template>
+            <template if:false={hasFilteredEvents}>
+                <p class="empty-copy">Nothing here yet — try another filter.</p>
+            </template>
+        </div>
+
+        <!-- HORIZONTAL TIMELINE -->
+        <div class="timeline-block" data-id="about-anchor">
+            <h2 class="timeline-heading">From click to <em>check-in</em></h2>
+            <div class="timeline">
+                <div class="timeline-node">
+                    <span class="node-dot"></span>
+                    <span class="node-label">Browse</span>
+                    <p>Skim what's happening, filter by type.</p>
                 </div>
-            </div>
-            <div class="step-item">
-                <span class="step-num">4</span>
-                <div>
-                    <h4>Attend &amp; Enjoy</h4>
-                    <p>Show up, check in, and have an amazing time.</p>
+                <div class="timeline-node">
+                    <span class="node-dot"></span>
+                    <span class="node-label">Sign in</span>
+                    <p>Quick account, or jump right back in.</p>
+                </div>
+                <div class="timeline-node">
+                    <span class="node-dot"></span>
+                    <span class="node-label">Confirm</span>
+                    <p>Capacity checked instantly — in or waitlisted.</p>
+                </div>
+                <div class="timeline-node">
+                    <span class="node-dot"></span>
+                    <span class="node-label">Attend</span>
+                    <p>That's it. See you there.</p>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- TESTIMONIALS -->
-    <div class="testimonials-section">
-        <h2 class="section-heading">What People <span class="highlight">Say</span></h2>
-        <div class="testimonials-grid">
-            <div class="testimonial-card">
-                <p class="quote">"The smoothest event registration we have ever experienced. QR check-in was flawless."</p>
-                <span class="author">— Karthik K., Event Organizer</span>
-            </div>
-            <div class="testimonial-card">
-                <p class="quote">"Loved the VIP experience. From booking to the event day, everything was seamless."</p>
-                <span class="author">— Priya P., Attendee</span>
-            </div>
-            <div class="testimonial-card">
-                <p class="quote">"As a speaker, the dashboard gave me real-time attendee insights. Game changer."</p>
-                <span class="author">— James W., Speaker</span>
-            </div>
+        <!-- CLOSING BANNER -->
+        <div class="closing">
+            <h2>Your next event is one click away.</h2>
+            <button class="btn-coral-outline" onclick={goToLogin}>Get started →</button>
         </div>
-    </div>
-
-    <!-- FOOTER CTA -->
-    <div class="footer-cta">
-        <h2>Ready to get started?</h2>
-        <p>Join thousands of event-goers on EpicEventz</p>
-        <button class="btn-cta btn-primary" onclick={goToLogin}>Create Account →</button>
     </div>
 </template>

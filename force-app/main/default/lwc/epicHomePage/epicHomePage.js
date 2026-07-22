@@ -2,68 +2,55 @@ import { LightningElement, wire, track } from 'lwc';
 import getPublishedEvents from '@salesforce/apex/RegistrationGuestController.getPublishedEvents';
 
 export default class EpicHomePage extends LightningElement {
-    @track events = [];
-    @track currentIndex = 0;
+    @track allEvents = [];
+    @track activeFilter = 'All';
 
-    get hasEvents() { return this.events && this.events.length > 0; }
-    get currentEvent() { return this.hasEvents ? this.events[this.currentIndex] : {}; }
+    get eventCount() { return this.allEvents.length; }
+    get heroPreview() { return this.allEvents.length > 0 ? this.allEvents[0] : null; }
+
+    get typeFilters() {
+        const types = ['All', ...new Set(this.allEvents.map(e => e.Event_Type__c).filter(Boolean))];
+        return types.map(t => ({
+            value: t,
+            label: t,
+            chipClass: t === this.activeFilter ? 'chip chip-active' : 'chip'
+        }));
+    }
+
+    get filteredEvents() {
+        if (this.activeFilter === 'All') return this.allEvents;
+        return this.allEvents.filter(e => e.Event_Type__c === this.activeFilter);
+    }
+    get hasFilteredEvents() { return this.filteredEvents.length > 0; }
 
     @wire(getPublishedEvents)
     wiredEvents({ data, error }) {
         if (data) {
-            this.events = data.map((evt, idx) => ({
+            this.allEvents = data.map(evt => ({
                 ...evt,
                 venueName: evt.Venue__r
-                    ? `${evt.Venue__r.City__c}, ${evt.Venue__r.State__c}` : 'TBD',
-                formattedDate: this.formatDate(evt.Start_Date__c, evt.End_Date__c),
-                seatsInfo: evt.Max_Capacity__c
-                    ? `${evt.Max_Capacity__c} seats left` : 'Unlimited',
-                dotClass: idx === 0 ? 'dot active' : 'dot'
+                    ? `${evt.Venue__r.City__c}, ${evt.Venue__r.State__c}` : 'Location TBD',
+                formattedDate: this.formatDate(evt.Start_Date__c),
+                seatsInfo: evt.Max_Capacity__c ? `${evt.Max_Capacity__c} spots` : 'Open'
             }));
+        } else if (error) {
+            console.error(error);
         }
     }
 
-    formatDate(start, end) {
-        if (!start) return 'TBD';
-        const s = new Date(start);
-        const opts = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-        return s.toLocaleDateString('en-US', opts);
+    formatDate(start) {
+        if (!start) return 'Date TBD';
+        const d = new Date(start);
+        return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     }
 
-    prevEvent() {
-        if (this.currentIndex > 0) {
-            this.currentIndex--;
-        } else {
-            this.currentIndex = this.events.length - 1;
-        }
-        this.updateDots();
+    handleFilterClick(event) {
+        this.activeFilter = event.currentTarget.dataset.value;
     }
 
-    nextEvent() {
-        if (this.currentIndex < this.events.length - 1) {
-            this.currentIndex++;
-        } else {
-            this.currentIndex = 0;
-        }
-        this.updateDots();
-    }
-
-    goToEvent(event) {
-        this.currentIndex = parseInt(event.currentTarget.dataset.index, 10);
-        this.updateDots();
-    }
-
-    updateDots() {
-        this.events = this.events.map((evt, idx) => ({
-            ...evt,
-            dotClass: idx === this.currentIndex ? 'dot active' : 'dot'
-        }));
-    }
-
-    handleViewEvent() {
-        // Redirect to login page — user must login to register
+    handleEventTileClick(event) {
+        const eventId = event.currentTarget.dataset.id;
         const basePath = window.location.pathname.replace(/\/s\/.*/, '/s/');
-        const eventId = this.currentEvent.Id;
         window.location.href = basePath + 'login?startURL=' +
             encodeURIComponent(basePath + '?eventId=' + eventId);
     }
@@ -74,7 +61,12 @@ export default class EpicHomePage extends LightningElement {
     }
 
     scrollToEvents() {
-        const el = this.template.querySelector('[data-id="events-section"]');
+        const el = this.template.querySelector('[data-id="events-anchor"]');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    scrollToAbout() {
+        const el = this.template.querySelector('[data-id="about-anchor"]');
         if (el) el.scrollIntoView({ behavior: 'smooth' });
     }
 }
