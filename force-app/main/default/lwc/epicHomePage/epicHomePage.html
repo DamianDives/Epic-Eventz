@@ -1,0 +1,154 @@
+<template>
+    <!-- HERO SECTION -->
+    <div class="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="floating-orbs">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+            <div class="orb orb-4"></div>
+            <div class="orb orb-5"></div>
+            <div class="orb orb-6"></div>
+        </div>
+        <div class="hero-content">
+            <h1 class="hero-title">
+                <span class="title-epic">Epic</span><span class="title-eventz">Eventz</span>
+            </h1>
+            <p class="hero-tagline">Bookings handled, stress cancelled.</p>
+            <div class="hero-buttons">
+                <button class="btn-cta btn-primary" onclick={scrollToEvents}>
+                    Browse Events →
+                </button>
+                <button class="btn-cta btn-outline" onclick={goToLogin}>
+                    Sign In
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WHY SECTION -->
+    <div class="why-section">
+        <h2 class="section-heading">Why <span class="highlight">EpicEventz</span>?</h2>
+        <p class="section-sub">Everything you need to create unforgettable experiences</p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🎪</span>
+                <h3>Seamless Bookings</h3>
+                <p>From event selection to confirmation — one smooth flow. No spreadsheets, no chaos.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🔒</span>
+                <h3>Smart Capacity</h3>
+                <p>Automatic waitlisting when events fill up. Instant promotion when spots open.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📊</span>
+                <h3>Real-Time Tracking</h3>
+                <p>Live registration counts, revenue rollups, and attendance tracking — all automatic.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- EVENTS CAROUSEL SECTION -->
+    <div class="events-section" data-id="events-section">
+        <h2 class="events-heading">
+            Upcoming <span class="highlight">Events</span>
+        </h2>
+
+        <template if:true={hasEvents}>
+            <div class="carousel-container">
+                <button class="carousel-btn carousel-prev" onclick={prevEvent}>←</button>
+                <div class="carousel-track">
+                    <div class="event-slide">
+                        <div class="slide-image">
+                            <span class="slide-type-badge">{currentEvent.Event_Type__c}</span>
+                        </div>
+                        <div class="slide-content">
+                            <h3 class="slide-title">{currentEvent.Name}</h3>
+                            <p class="slide-meta">📅 {currentEvent.formattedDate}</p>
+                            <p class="slide-meta">📍 {currentEvent.venueName}</p>
+                            <div class="slide-footer">
+                                <span class="slide-seats">{currentEvent.seatsInfo}</span>
+                                <button class="btn-view-event" onclick={handleViewEvent}>
+                                    View Event →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="carousel-btn carousel-next" onclick={nextEvent}>→</button>
+            </div>
+            <div class="carousel-dots">
+                <template for:each={events} for:item="evt" for:index="idx">
+                    <span key={evt.Id} class={evt.dotClass}
+                          data-index={idx} onclick={goToEvent}></span>
+                </template>
+            </div>
+        </template>
+
+        <template if:false={hasEvents}>
+            <p class="no-events">No upcoming events yet. Check back soon!</p>
+        </template>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="how-section">
+        <h2 class="section-heading">How It <span class="highlight">Works</span></h2>
+        <div class="steps">
+            <div class="step-item">
+                <span class="step-num">1</span>
+                <div>
+                    <h4>Browse Events</h4>
+                    <p>Explore upcoming events with dates, venues, and availability.</p>
+                </div>
+            </div>
+            <div class="step-item">
+                <span class="step-num">2</span>
+                <div>
+                    <h4>Create Your Account</h4>
+                    <p>Quick signup — just name, email, and password.</p>
+                </div>
+            </div>
+            <div class="step-item">
+                <span class="step-num">3</span>
+                <div>
+                    <h4>Register Instantly</h4>
+                    <p>One-click registration with automatic confirmation or waitlisting.</p>
+                </div>
+            </div>
+            <div class="step-item">
+                <span class="step-num">4</span>
+                <div>
+                    <h4>Attend &amp; Enjoy</h4>
+                    <p>Show up, check in, and have an amazing time.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TESTIMONIALS -->
+    <div class="testimonials-section">
+        <h2 class="section-heading">What People <span class="highlight">Say</span></h2>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <p class="quote">"The smoothest event registration we have ever experienced. QR check-in was flawless."</p>
+                <span class="author">— Karthik K., Event Organizer</span>
+            </div>
+            <div class="testimonial-card">
+                <p class="quote">"Loved the VIP experience. From booking to the event day, everything was seamless."</p>
+                <span class="author">— Priya P., Attendee</span>
+            </div>
+            <div class="testimonial-card">
+                <p class="quote">"As a speaker, the dashboard gave me real-time attendee insights. Game changer."</p>
+                <span class="author">— James W., Speaker</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER CTA -->
+    <div class="footer-cta">
+        <h2>Ready to get started?</h2>
+        <p>Join thousands of event-goers on EpicEventz</p>
+        <button class="btn-cta btn-primary" onclick={goToLogin}>Create Account →</button>
+    </div>
+</template>
