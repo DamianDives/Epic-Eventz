@@ -1,6 +1,5 @@
 import { LightningElement, track } from 'lwc';
 import registerUser from '@salesforce/apex/SelfRegistrationController.registerUser';
-import loginUser from '@salesforce/apex/SelfRegistrationController.loginUser';
 
 export default class SelfRegistration extends LightningElement {
     @track mode = 'login'; // 'login' or 'signup'
@@ -21,6 +20,24 @@ export default class SelfRegistration extends LightningElement {
         return this.mode === 'login'
             ? 'Sign in to register for events'
             : 'Create your account';
+    }
+
+    // Native site login servlet. This must be a real <form method="post">
+    // submit — Site.login() called through @AuraEnabled cannot establish
+    // the session cookie correctly, which is what caused the
+    // "[object Object]" / Invalid Page redirect.
+    get loginActionUrl() {
+        const path = window.location.pathname;
+        const siteBase = path.substring(0, path.indexOf('/s/') + 1); // e.g. /epicevents/
+        return siteBase + 'login';
+    }
+
+    // Preserve any ?eventId=... (or other) query params the user landed with,
+    // so after login they're sent back to the same place they came from.
+    get startUrl() {
+        const path = window.location.pathname;
+        const siteBase = path.substring(0, path.indexOf('/s/') + 3); // e.g. /epicevents/s/
+        return siteBase + window.location.search;
     }
 
     handleFirstNameChange(e) { this.firstName = e.target.value; }
@@ -87,32 +104,7 @@ export default class SelfRegistration extends LightningElement {
         }
     }
 
-    async handleLogin() {
-        this.clearMessages();
-        if (!this.email || !this.password) {
-            this.showError = true;
-            this.errorMessage = 'Email and password are required.';
-            return;
-        }
-
-        this.isLoading = true;
-        try {
-            const result = await loginUser({
-                username: this.email,
-                password: this.password,
-                startUrl: '/s/'
-            });
-            if (result.success) {
-                window.location.href = result.redirectUrl;
-            } else {
-                this.showError = true;
-                this.errorMessage = result.message || 'Invalid email or password. Please try again.';
-            }
-        } catch (error) {
-            this.showError = true;
-            this.errorMessage = error.body ? error.body.message : 'Login failed. Please check your credentials.';
-        } finally {
-            this.isLoading = false;
-        }
-    }
+    // Login is now a native form POST (see loginActionUrl/startUrl above and
+    // the <form> in the .html file) — the browser handles submission and
+    // redirect itself, so there's no JS handler needed here anymore.
 }

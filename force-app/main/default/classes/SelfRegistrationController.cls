@@ -121,32 +121,13 @@ public without sharing class SelfRegistrationController {
         return result;
     }
     
-    @AuraEnabled
-    public static LoginResult loginUser(String username, String password, String startUrl) {
-        LoginResult result = new LoginResult();
-        try {
-            PageReference pageRef = Site.login(username, password, startUrl);
-            if (pageRef != null) {
-                result.success = true;
-                result.redirectUrl = pageRef.getUrl();
-            } else {
-                result.success = false;
-                result.message = 'Invalid email or password.';
-            }
-        } catch (Exception e) {
-            result.success = false;
-            // Surface the real reason (e.g. "user is inactive", "wrong password",
-            // "too many failed logins") instead of hiding it behind a generic message.
-            result.message = e.getMessage();
-        }
-        return result;
-    }
-    
-    public class LoginResult {
-        @AuraEnabled public Boolean success;
-        @AuraEnabled public String redirectUrl;
-        @AuraEnabled public String message;
-    }
+    // NOTE: Login is intentionally NOT handled here anymore. Site.login()
+    // cannot reliably set the session cookie when invoked through an
+    // @AuraEnabled method (LWC/UI-API remoting is just an XHR call under
+    // the hood), which caused the "[object Object]" / Invalid Page redirect
+    // users were hitting. Login is now a native HTML <form method="post">
+    // submit straight to the site's built-in /login servlet — see the
+    // selfRegistration LWC's loginActionUrl/startUrl getters.
     
     private static String getDefaultAccountId() {
         List<Account> defaultAcct = [

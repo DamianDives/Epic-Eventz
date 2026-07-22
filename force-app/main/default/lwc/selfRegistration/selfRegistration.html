@@ -6,20 +6,26 @@
                 <p class="auth-tagline">{headerSubtext}</p>
             </div>
 
-            <!-- Login Form -->
+            <!-- Login Form — real HTML form POST to the site's native login
+                 handler (not an Apex/@AuraEnabled call). Site.login() cannot
+                 set the session cookie correctly when invoked over the
+                 LWC/UI-API remoting layer, so we submit a genuine browser
+                 form post to /login here, exactly like the standard login
+                 page does under the hood. -->
             <template if:true={isLoginMode}>
-                <div class="auth-form">
+                <form class="auth-form" method="post" action={loginActionUrl}>
+                    <input type="hidden" name="startURL" value={startUrl} />
                     <div class="form-group">
                         <label class="form-label">Email</label>
-                        <input type="email" class="form-input" value={email}
-                               onchange={handleEmailChange} placeholder="you@email.com"/>
+                        <input type="email" name="un" class="form-input" value={email}
+                               onchange={handleEmailChange} placeholder="you@email.com" required/>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Password</label>
-                        <input type="password" class="form-input" value={password}
-                               onchange={handlePasswordChange} placeholder="••••••••"/>
+                        <input type="password" name="pw" class="form-input" value={password}
+                               onchange={handlePasswordChange} placeholder="••••••••" required/>
                     </div>
-                    <button class="btn btn-primary btn-full" onclick={handleLogin}
+                    <button type="submit" class="btn btn-primary btn-full"
                             disabled={isLoading}>
                         <template if:true={isLoading}>Logging in...</template>
                         <template if:false={isLoading}>Log In</template>
@@ -28,7 +34,7 @@
                         Don't have an account?
                         <a class="auth-link" onclick={switchToSignup}>Sign Up</a>
                     </p>
-                </div>
+                </form>
             </template>
 
             <!-- Signup Form -->
