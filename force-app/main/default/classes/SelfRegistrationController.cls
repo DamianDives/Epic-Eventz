@@ -27,8 +27,18 @@ public without sharing class SelfRegistrationController {
             ];
             if (!existingUsers.isEmpty()) {
                 result.success = false;
-                result.message = 'An account with this email already exists. Please log in.';
+                result.message = 'An account with this email already exists. Please log in. If you cannot log in, use "Forgot Password".';
                 return result;
+            }
+            
+            // Reuse an existing Contact with this email (from a previous failed attempt)
+            // instead of creating a duplicate Contact record.
+            Contact existingContact = null;
+            List<Contact> matches = [
+                SELECT Id FROM Contact WHERE Email = :email LIMIT 1
+            ];
+            if (!matches.isEmpty()) {
+                existingContact = matches[0];
             }
             
             // Create the user via Site.createExternalUser
@@ -54,16 +64,12 @@ public without sharing class SelfRegistrationController {
                 return result;
             }
             
-            // Create Contact first
-            Contact c = new Contact(
-                FirstName = firstName,
-                LastName = lastName,
-                Email = email,
-                AccountId = accountId
-            );
-            insert c;
-            
-            // Also create an Attendee record linked to this contact
+            // Create the Attendee__c record FIRST, in its own DML statement,
+            // before touching Contact/User (setup objects). Mixing DML on
+            // setup objects (User/Contact via Site.createExternalUser) with
+            // non-setup custom objects (Attendee__c) in the same transaction
+            // throws MIXED_DML_OPERATION, so Attendee__c must be fully
+            // committed before we get to the Contact + User creation below.
             List<Attendee__c> existingAttendees = [
                 SELECT Id FROM Attendee__c WHERE Email__c = :email LIMIT 1
             ];
@@ -74,6 +80,21 @@ public without sharing class SelfRegistrationController {
                     Preferred_Currency__c = 'USD'
                 );
                 insert att;
+            }
+            
+            // Now handle Contact + User (setup objects — safe to mix these
+            // two together, just not with Attendee__c above).
+            Contact c;
+            if (existingContact != null) {
+                c = existingContact;
+            } else {
+                c = new Contact(
+                    FirstName = firstName,
+                    LastName = lastName,
+                    Email = email,
+                    AccountId = accountId
+                );
+                insert c;
             }
             
             // Create the community user
@@ -101,41 +122,42 @@ public without sharing class SelfRegistrationController {
     }
     
     @AuraEnabled
-    public static String loginUser(String username, String password, String startUrl) {
+    public static LoginResult loginUser(String username, String password, String startUrl) {
+        LoginResult result = new LoginResult();
         try {
-            ApexPages.PageReference pageRef = Site.login(username, password, startUrl);
+            PageReference pageRef = Site.login(username, password, startUrl);
             if (pageRef != null) {
-                return pageRef.getUrl();
+                result.success = true;
+                result.redirectUrl = pageRef.getUrl();
+            } else {
+                result.success = false;
+                result.message = 'Invalid email or password.';
             }
-            return null;
         } catch (Exception e) {
-            return null;
+            result.success = false;
+            // Surface the real reason (e.g. "user is inactive", "wrong password",
+            // "too many failed logins") instead of hiding it behind a generic message.
+            result.message = e.getMessage();
         }
+        return result;
+    }
+    
+    public class LoginResult {
+        @AuraEnabled public Boolean success;
+        @AuraEnabled public String redirectUrl;
+        @AuraEnabled public String message;
     }
     
     private static String getDefaultAccountId() {
-        // Try to find an existing account for community users
-        // First check if there's a site-configured account
-        String networkId = Network.getNetworkId();
-        if (networkId != null) {
-            // Try network-based account
-            List<Account> accts = [
-                SELECT Id FROM Account 
-                WHERE Name = 'EpicEventz Community' LIMIT 1
-            ];
-            if (!accts.isEmpty()) return accts[0].Id;
-        }
-        
-        // Fallback: create or find default account
         List<Account> defaultAcct = [
-            SELECT Id FROM Account 
+            SELECT Id FROM Account
             WHERE Name = 'EpicEventz Community' LIMIT 1
         ];
         if (!defaultAcct.isEmpty()) {
             return defaultAcct[0].Id;
         }
         
-        // Create it
+        // Create it if it doesn't exist yet
         Account a = new Account(Name = 'EpicEventz Community');
         insert a;
         return a.Id;

@@ -97,20 +97,20 @@ export default class SelfRegistration extends LightningElement {
 
         this.isLoading = true;
         try {
-            const redirectUrl = await loginUser({
+            const result = await loginUser({
                 username: this.email,
                 password: this.password,
                 startUrl: '/s/'
             });
-            if (redirectUrl) {
-                window.location.href = redirectUrl;
+            if (result.success) {
+                window.location.href = result.redirectUrl;
             } else {
                 this.showError = true;
-                this.errorMessage = 'Invalid email or password. Please try again.';
+                this.errorMessage = result.message || 'Invalid email or password. Please try again.';
             }
         } catch (error) {
             this.showError = true;
-            this.errorMessage = 'Login failed. Please check your credentials.';
+            this.errorMessage = error.body ? error.body.message : 'Login failed. Please check your credentials.';
         } finally {
             this.isLoading = false;
         }
