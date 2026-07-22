@@ -1,165 +1,38 @@
 <template>
-    <div class="registration-container">
-        <!-- Hero Header -->
-        <div class="hero-section">
-            <div class="hero-content">
-                <h1 class="hero-title">EpicEventz</h1>
-                <p class="hero-subtitle">Discover and register for amazing events</p>
-            </div>
+    <div class="epic-container">
+        <!-- Hero -->
+        <div class="hero">
+            <h1>🎯 EpicEventz</h1>
+            <p>Discover amazing events. Register instantly.</p>
         </div>
 
-        <!-- Progress Steps -->
-        <div class="progress-bar">
-            <div class={step1Class}>
-                <span class="step-number">1</span>
-                <span class="step-label">Choose Event</span>
-            </div>
-            <div class="step-connector"></div>
-            <div class={step2Class}>
-                <span class="step-number">2</span>
-                <span class="step-label">Your Details</span>
-            </div>
-            <div class="step-connector"></div>
-            <div class={step3Class}>
-                <span class="step-number">3</span>
-                <span class="step-label">Confirmation</span>
-            </div>
-        </div>
+        <!-- Events Grid -->
+        <div class="content">
+            <h2 class="heading">Upcoming Events</h2>
 
-        <!-- Step 1: Event Selection -->
-        <template if:true={isStep1}>
-            <div class="content-section">
-                <h2 class="section-title">Upcoming Events</h2>
-                <p class="section-desc">Select an event to register for</p>
-                
-                <template if:true={hasEvents}>
-                    <div class="events-grid">
-                        <template for:each={events} for:item="event">
-                            <div key={event.Id} class={event.cardClass} onclick={handleEventSelect} data-id={event.Id}>
-                                <div class="event-card-header">
-                                    <span class="event-type-badge">{event.Event_Type__c}</span>
-                                    <span class="event-capacity-badge">{event.seatsInfo}</span>
-                                </div>
-                                <h3 class="event-card-title">{event.Name}</h3>
-                                <div class="event-card-details">
-                                    <div class="detail-row">
-                                        <svg class="detail-icon" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                                        <span>{event.venueName}</span>
-                                    </div>
-                                    <div class="detail-row">
-                                        <svg class="detail-icon" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
-                                        <span>{event.formattedDate}</span>
-                                    </div>
-                                </div>
+            <template if:true={hasEvents}>
+                <div class="grid">
+                    <template for:each={events} for:item="evt">
+                        <div key={evt.Id} class="card">
+                            <div class="card-head">
+                                <span class="type-badge">{evt.Event_Type__c}</span>
+                                <span class="seats">{evt.seatsInfo}</span>
                             </div>
-                        </template>
-                    </div>
-                </template>
-
-                <template if:false={hasEvents}>
-                    <div class="empty-state">
-                        <p>No published events available right now. Check back soon!</p>
-                    </div>
-                </template>
-
-                <div class="action-bar">
-                    <button class="btn btn-primary" onclick={goToStep2} disabled={isNextDisabled}>
-                        Continue
-                    </button>
-                </div>
-            </div>
-        </template>
-
-        <!-- Step 2: Attendee Form -->
-        <template if:true={isStep2}>
-            <div class="content-section">
-                <h2 class="section-title">Your Information</h2>
-                <p class="section-desc">Tell us about yourself to complete registration</p>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">Full Name *</label>
-                        <input type="text" class="form-input" value={attendeeName} placeholder="Enter your full name" onchange={handleNameChange} required/>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Email Address *</label>
-                        <input type="email" class="form-input" value={email} placeholder="you@company.com" onchange={handleEmailChange} required/>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Phone Number</label>
-                        <input type="tel" class="form-input" value={phone} placeholder="+1 (555) 000-0000" onchange={handlePhoneChange}/>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Company</label>
-                        <input type="text" class="form-input" value={company} placeholder="Your company name" onchange={handleCompanyChange}/>
-                    </div>
-                    <div class="form-group full-width">
-                        <label class="form-label">Registration Amount (USD) *</label>
-                        <input type="number" class="form-input" value={regAmount} placeholder="0.00" step="0.01" min="0" onchange={handleAmountChange} required/>
-                    </div>
-                </div>
-
-                <div class="action-bar">
-                    <button class="btn btn-secondary" onclick={goToStep1}>Back</button>
-                    <button class="btn btn-primary" onclick={handleRegister} disabled={isRegisterDisabled}>
-                        <template if:true={isLoading}>
-                            <span class="spinner"></span> Processing...
-                        </template>
-                        <template if:false={isLoading}>
-                            Register Now
-                        </template>
-                    </button>
-                </div>
-            </div>
-        </template>
-
-        <!-- Step 3: Result -->
-        <template if:true={isStep3}>
-            <div class="content-section">
-                <template if:true={registrationSuccess}>
-                    <div class="result-container success">
-                        <div class="result-icon success-icon">&#10003;</div>
-                        <h2 class="result-title">Registration Successful!</h2>
-                        <p class="result-subtitle">
-                            <template if:true={isWaitlisted}>
-                                You have been added to the waitlist. We will notify you when a spot opens up.
-                            </template>
-                            <template if:false={isWaitlisted}>
-                                You are confirmed! We look forward to seeing you there.
-                            </template>
-                        </p>
-                        
-                        <div class="result-details">
-                            <div class="result-detail-item">
-                                <span class="detail-label">Registration #</span>
-                                <span class="detail-value">{regNumber}</span>
-                            </div>
-                            <div class="result-detail-item">
-                                <span class="detail-label">Status</span>
-                                <span class={statusBadgeClass}>{resultStatus}</span>
-                            </div>
-                            <template if:true={isWaitlisted}>
-                                <div class="result-detail-item">
-                                    <span class="detail-label">Queue Position</span>
-                                    <span class="detail-value">#{waitlistPosition}</span>
-                                </div>
-                            </template>
+                            <h3 class="card-name">{evt.Name}</h3>
+                            <p class="card-detail">📍 {evt.venueName}</p>
+                            <p class="card-detail">📅 {evt.formattedDate}</p>
+                            <button class="btn-register" data-id={evt.Id}
+                                    onclick={handleRegisterClick}>
+                                Register Now →
+                            </button>
                         </div>
-                    </div>
-                </template>
-
-                <template if:true={registrationError}>
-                    <div class="result-container error">
-                        <div class="result-icon error-icon">&#10007;</div>
-                        <h2 class="result-title">Registration Failed</h2>
-                        <p class="result-subtitle">{errorMessage}</p>
-                    </div>
-                </template>
-
-                <div class="action-bar">
-                    <button class="btn btn-primary" onclick={handleReset}>Register for Another Event</button>
+                    </template>
                 </div>
-            </div>
-        </template>
+            </template>
+
+            <template if:false={hasEvents}>
+                <p class="empty">No events available right now.</p>
+            </template>
+        </div>
     </div>
 </template>

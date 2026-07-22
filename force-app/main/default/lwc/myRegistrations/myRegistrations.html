@@ -1,0 +1,71 @@
+<template>
+    <div class="my-regs-container">
+        <div class="header">
+            <h2>📋 My Registrations</h2>
+            <p class="sub">Manage your event registrations</p>
+        </div>
+
+        <template if:true={hasRegistrations}>
+            <div class="reg-list">
+                <template for:each={registrations} for:item="reg">
+                    <div key={reg.regId} class="reg-card">
+                        <div class="reg-left">
+                            <div class="reg-event-info">
+                                <span class="event-type-tag">{reg.eventType}</span>
+                                <h3 class="event-name">{reg.eventName}</h3>
+                                <p class="event-meta">📍 {reg.venue}</p>
+                                <p class="event-meta">📅 {reg.formattedDate}</p>
+                            </div>
+                        </div>
+                        <div class="reg-right">
+                            <div class="reg-details">
+                                <span class={reg.statusClass}>{reg.status}</span>
+                                <template if:true={reg.isWaitlisted}>
+                                    <span class="position">Position #{reg.waitlistPosition}</span>
+                                </template>
+                                <p class="reg-num">{reg.regNumber}</p>
+                                <template if:true={reg.amount}>
+                                    <p class="reg-amount">${reg.amount}</p>
+                                </template>
+                            </div>
+                            <button class="btn-cancel" data-id={reg.regId}
+                                    onclick={handleCancel}>
+                                Cancel Registration
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <template if:false={hasRegistrations}>
+            <div class="empty-state">
+                <p>You don't have any active registrations.</p>
+                <p class="empty-sub">Browse events and register for one!</p>
+            </div>
+        </template>
+
+        <!-- Confirm Cancel Modal -->
+        <template if:true={showConfirmModal}>
+            <div class="modal-overlay">
+                <div class="modal">
+                    <h3>Cancel Registration?</h3>
+                    <p>Are you sure you want to cancel? This cannot be undone.</p>
+                    <div class="modal-actions">
+                        <button class="btn-secondary" onclick={closeModal}>Keep It</button>
+                        <button class="btn-danger" onclick={confirmCancel}>
+                            Yes, Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Toast -->
+        <template if:true={showToast}>
+            <div class={toastClass}>
+                <span>{toastMessage}</span>
+            </div>
+        </template>
+    </div>
+</template>

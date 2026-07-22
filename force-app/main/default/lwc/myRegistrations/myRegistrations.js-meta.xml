@@ -4,9 +4,10 @@
     <isExposed>true</isExposed>
     <targets>
         <target>lightning__AppPage</target>
+        <target>lightning__HomePage</target>
         <target>lightningCommunity__Page</target>
         <target>lightningCommunity__Default</target>
     </targets>
-    <masterLabel>Event Registration Public</masterLabel>
-    <description>Public event listing that redirects to login when user tries to register</description>
+    <masterLabel>My Registrations</masterLabel>
+    <description>Shows logged-in user their registrations with cancel option</description>
 </LightningComponentBundle>
