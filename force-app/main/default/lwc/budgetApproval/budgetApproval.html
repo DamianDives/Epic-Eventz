@@ -1,73 +1,82 @@
 <template>
-    <lightning-card title="Budget Approval Manager" icon-name="standard:approval">
-        
-        <!-- Tab Navigation -->
-        <div class="slds-p-around_medium">
-            <lightning-tabset>
-                <!-- Submit Tab -->
-                <lightning-tab label="Submit for Approval">
-                    <div class="slds-p-around_small">
-                        <template if:true={draftEvents}>
-                            <lightning-datatable
-                                key-field="Id"
-                                data={draftEvents}
-                                columns={submitColumns}
-                                onrowaction={handleSubmitAction}
-                                hide-checkbox-column>
-                            </lightning-datatable>
-                        </template>
-                        <template if:false={draftEvents}>
-                            <p class="slds-text-body_regular slds-align_absolute-center">No draft events to submit.</p>
-                        </template>
-                    </div>
-                </lightning-tab>
-                
-                <!-- Approve/Reject Tab -->
-                <lightning-tab label="Pending Approvals">
-                    <div class="slds-p-around_small">
-                        <template if:true={pendingEvents}>
-                            <lightning-datatable
-                                key-field="Id"
-                                data={pendingEvents}
-                                columns={approvalColumns}
-                                onrowaction={handleApprovalAction}
-                                hide-checkbox-column>
-                            </lightning-datatable>
-                        </template>
-                        <template if:false={pendingEvents}>
-                            <p class="slds-text-body_regular slds-align_absolute-center">No events pending approval.</p>
-                        </template>
-                    </div>
-                </lightning-tab>
-            </lightning-tabset>
+    <div class="approval-container">
+        <div class="approval-header">
+            <h1>Budget Approvals</h1>
+            <p>Manage event budget submissions and approvals</p>
         </div>
-        
-        <!-- Modal -->
-        <template if:true={showModal}>
-            <section class="slds-modal slds-fade-in-open" aria-modal="true" role="dialog">
-                <div class="slds-modal__container">
-                    <header class="slds-modal__header">
-                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={closeModal}>
-                            <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
-                        </button>
-                        <h2 class="slds-text-heading_medium">{modalTitle}</h2>
-                    </header>
-                    <div class="slds-modal__content slds-p-around_medium">
-                        <dl class="slds-dl_horizontal slds-m-bottom_medium">
-                            <dt class="slds-dl_horizontal__label">Event:</dt>
-                            <dd class="slds-dl_horizontal__detail">{selectedEventName}</dd>
-                            <dt class="slds-dl_horizontal__label">Budget:</dt>
-                            <dd class="slds-dl_horizontal__detail">{selectedEventBudget}</dd>
-                        </dl>
-                        <lightning-textarea label="Comments" value={comments} onchange={handleCommentsChange}></lightning-textarea>
-                    </div>
-                    <footer class="slds-modal__footer">
-                        <lightning-button label="Cancel" onclick={closeModal} class="slds-m-right_small"></lightning-button>
-                        <lightning-button label={modalActionLabel} variant={modalVariant} onclick={handleConfirmAction}></lightning-button>
-                    </footer>
-                </div>
-            </section>
-            <div class="slds-backdrop slds-backdrop_open"></div>
+
+        <template if:false={hasFinanceAccess}>
+            <div class="access-denied">
+                <span class="denied-icon">🔒</span>
+                <h3>Finance Access Required</h3>
+                <p>Only users with the Finance Manager permission can approve or reject budgets.</p>
+            </div>
         </template>
-    </lightning-card>
+
+        <template if:true={hasFinanceAccess}>
+            <!-- Pending Approvals -->
+            <div class="section">
+                <h2 class="section-title">Pending Approvals ({pendingCount})</h2>
+                <template if:true={pendingEvents}>
+                    <div class="approval-list">
+                        <template for:each={pendingEvents} for:item="evt">
+                            <div key={evt.Id} class="approval-card">
+                                <div class="card-left">
+                                    <h3>{evt.Name}</h3>
+                                    <span class="card-type">{evt.Event_Type__c}</span>
+                                    <span class="card-date">{evt.Start_Date__c}</span>
+                                </div>
+                                <div class="card-right">
+                                    <span class="budget-amount">${evt.Budget__c}</span>
+                                    <div class="card-actions">
+                                        <button class="btn-approve" data-id={evt.Id}
+                                                onclick={handleApprove}>✓ Approve</button>
+                                        <button class="btn-reject" data-id={evt.Id}
+                                                onclick={handleReject}>✗ Reject</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <template if:false={pendingEvents}>
+                    <div class="empty-state">
+                        <p>No events pending approval 🎉</p>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- Draft Events (anyone can submit) -->
+        <div class="section">
+            <h2 class="section-title">Draft Events — Submit for Approval</h2>
+            <template if:true={draftEvents}>
+                <div class="approval-list">
+                    <template for:each={draftEvents} for:item="evt">
+                        <div key={evt.Id} class="approval-card draft">
+                            <div class="card-left">
+                                <h3>{evt.Name}</h3>
+                                <span class="card-type">{evt.Event_Type__c}</span>
+                            </div>
+                            <div class="card-right">
+                                <span class="budget-amount">${evt.Budget__c}</span>
+                                <button class="btn-submit" data-id={evt.Id}
+                                        onclick={handleSubmit}>Submit</button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+            <template if:false={draftEvents}>
+                <div class="empty-state">
+                    <p>No draft events to submit.</p>
+                </div>
+            </template>
+        </div>
+
+        <!-- Toast -->
+        <template if:true={showToast}>
+            <div class={toastClass}>{toastMessage}</div>
+        </template>
+    </div>
 </template>

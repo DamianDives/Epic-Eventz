@@ -1,8 +1,8 @@
 import { LightningElement, wire, track } from 'lwc';
-import getPublishedEvents from '@salesforce/apex/RegistrationController.getPublishedEvents';
-import registerForEvent from '@salesforce/apex/RegistrationController.registerForEvent';
+import getPublishedEvents from '@salesforce/apex/RegistrationGuestController.getPublishedEvents';
+import registerForEvent from '@salesforce/apex/RegistrationGuestController.registerForEvent';
 
-export default class EventRegistration extends LightningElement {
+export default class EventRegistrationPublic extends LightningElement {
     @track currentStep = 1;
     @track events = [];
     @track selectedEventId = null;
@@ -12,6 +12,8 @@ export default class EventRegistration extends LightningElement {
     @track company = '';
     @track regAmount = null;
     @track isLoading = false;
+    
+    // Result
     @track registrationSuccess = false;
     @track registrationError = false;
     @track resultStatus = '';
@@ -24,14 +26,12 @@ export default class EventRegistration extends LightningElement {
         if (data) {
             this.events = data.map(evt => ({
                 ...evt,
-                venueName: evt.Venue__r
-                    ? `${evt.Venue__r.City__c}, ${evt.Venue__r.State__c}`
-                    : 'Location TBD',
+                venueName: evt.Venue__r ? `${evt.Venue__r.City__c}, ${evt.Venue__r.State__c}` : 'TBD',
                 formattedDate: this.formatDate(evt.Start_Date__c, evt.End_Date__c),
-                seatsInfo: evt.Max_Capacity__c
-                    ? `${evt.Max_Capacity__c} seats` : 'Unlimited',
-                isSelected: false,
-                cardClass: 'event-card'
+                seatsInfo: `Capacity: ${evt.Max_Capacity__c || 'Unlimited'}`,
+                cardClass: this.selectedEventId === evt.Id 
+                    ? 'event-card selected' 
+                    : 'event-card'
             }));
         } else if (error) {
             console.error('Error loading events:', error);
@@ -39,58 +39,52 @@ export default class EventRegistration extends LightningElement {
     }
 
     formatDate(startDate, endDate) {
-        if (!startDate) return 'Date TBD';
+        if (!startDate) return 'TBD';
         const start = new Date(startDate);
-        const opts = { month: 'short', day: 'numeric', year: 'numeric' };
-        let result = start.toLocaleDateString('en-US', opts);
+        const options = { month: 'short', day: 'numeric', year: 'numeric' };
+        let result = start.toLocaleDateString('en-US', options);
         if (endDate) {
             const end = new Date(endDate);
             if (start.toDateString() !== end.toDateString()) {
-                result += ' – ' + end.toLocaleDateString('en-US', opts);
+                result += ' - ' + end.toLocaleDateString('en-US', options);
             }
         }
         return result;
     }
 
-    // Step getters
+    // Step navigation
     get isStep1() { return this.currentStep === 1; }
     get isStep2() { return this.currentStep === 2; }
     get isStep3() { return this.currentStep === 3; }
+    
+    // Progress step classes
+    get step1Class() { 
+        return `step-item ${this.currentStep >= 1 ? 'active' : ''} ${this.currentStep > 1 ? 'completed' : ''}`; 
+    }
+    get step2Class() { 
+        return `step-item ${this.currentStep >= 2 ? 'active' : ''} ${this.currentStep > 2 ? 'completed' : ''}`; 
+    }
+    get step3Class() { 
+        return `step-item ${this.currentStep >= 3 ? 'active' : ''}`; 
+    }
+    
     get hasEvents() { return this.events && this.events.length > 0; }
     get isNextDisabled() { return !this.selectedEventId; }
-    get isRegisterDisabled() {
-        return !this.attendeeName || !this.email || !this.regAmount || this.isLoading;
+    get isRegisterDisabled() { 
+        return !this.attendeeName || !this.email || !this.regAmount || this.isLoading; 
     }
     get isWaitlisted() { return this.resultStatus === 'Waitlisted'; }
-
-    // Progress step classes
-    get step1Class() {
-        if (this.currentStep > 1) return 'step completed';
-        if (this.currentStep === 1) return 'step active';
-        return 'step';
-    }
-    get step2Class() {
-        if (this.currentStep > 2) return 'step completed';
-        if (this.currentStep === 2) return 'step active';
-        return 'step';
-    }
-    get step3Class() {
-        if (this.currentStep === 3) return 'step active';
-        return 'step';
-    }
-    get statusClass() {
-        return this.resultStatus === 'Confirmed'
-            ? 'status-confirmed' : 'status-waitlisted';
+    get statusBadgeClass() { 
+        return this.resultStatus === 'Confirmed' ? 'status-badge-confirmed' : 'status-badge-waitlisted'; 
     }
 
-    // Event handlers
     handleEventSelect(event) {
         this.selectedEventId = event.currentTarget.dataset.id;
         this.events = this.events.map(evt => ({
             ...evt,
-            isSelected: evt.Id === this.selectedEventId,
-            cardClass: evt.Id === this.selectedEventId
-                ? 'event-card selected' : 'event-card'
+            cardClass: this.selectedEventId === evt.Id 
+                ? 'event-card selected' 
+                : 'event-card'
         }));
     }
 
@@ -101,11 +95,15 @@ export default class EventRegistration extends LightningElement {
     handleAmountChange(event) { this.regAmount = event.target.value; }
 
     goToStep1() { this.currentStep = 1; }
-    goToStep2() { if (this.selectedEventId) this.currentStep = 2; }
+    goToStep2() { 
+        if (this.selectedEventId) {
+            this.currentStep = 2; 
+        }
+    }
 
     async handleRegister() {
-        if (!this.attendeeName || !this.email || !this.regAmount) return;
         this.isLoading = true;
+        
         try {
             const result = await registerForEvent({
                 eventId: this.selectedEventId,
@@ -115,6 +113,7 @@ export default class EventRegistration extends LightningElement {
                 company: this.company,
                 regAmount: parseFloat(this.regAmount)
             });
+            
             if (result.success) {
                 this.registrationSuccess = true;
                 this.registrationError = false;
@@ -126,6 +125,7 @@ export default class EventRegistration extends LightningElement {
                 this.registrationError = true;
                 this.errorMessage = result.errorMessage;
             }
+            
             this.currentStep = 3;
         } catch (error) {
             this.registrationSuccess = false;
@@ -151,8 +151,5 @@ export default class EventRegistration extends LightningElement {
         this.waitlistPosition = null;
         this.regNumber = '';
         this.errorMessage = '';
-        this.events = this.events.map(evt => ({
-            ...evt, isSelected: false, cardClass: 'event-card'
-        }));
     }
 }

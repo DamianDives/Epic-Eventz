@@ -2,6 +2,17 @@ public with sharing class BudgetApprovalController {
     
     private static final Decimal APPROVAL_THRESHOLD = 10000;
     
+    private static Boolean hasFinancePermission() {
+        List<PermissionSetAssignment> assignments = [
+            SELECT Id FROM PermissionSetAssignment 
+            WHERE AssigneeId = :UserInfo.getUserId() 
+            AND PermissionSet.Name = 'EpicEventz_Finance'
+        ];
+        // Also allow System Admins
+        Profile p = [SELECT Name FROM Profile WHERE Id = :UserInfo.getProfileId()];
+        return !assignments.isEmpty() || p.Name == 'System Administrator';
+    }
+    
     @AuraEnabled
     public static ApprovalResult submitForApproval(Id eventId, String comments) {
         ApprovalResult result = new ApprovalResult();
@@ -34,6 +45,12 @@ public with sharing class BudgetApprovalController {
     public static ApprovalResult approveEvent(Id eventId, String comments) {
         ApprovalResult result = new ApprovalResult();
         try {
+            if (!hasFinancePermission()) {
+                result.success = false;
+                result.message = 'Only Finance Managers can approve budgets. Please contact your administrator.';
+                return result;
+            }
+            
             Event__c evt = [SELECT Id, Budget__c, Approval_Status__c FROM Event__c WHERE Id = :eventId];
             evt.Approval_Status__c = 'Approved';
             evt.Approved_Budget__c = evt.Budget__c;
@@ -53,6 +70,12 @@ public with sharing class BudgetApprovalController {
     public static ApprovalResult rejectEvent(Id eventId, String comments) {
         ApprovalResult result = new ApprovalResult();
         try {
+            if (!hasFinancePermission()) {
+                result.success = false;
+                result.message = 'Only Finance Managers can reject budgets. Please contact your administrator.';
+                return result;
+            }
+            
             Event__c evt = [SELECT Id FROM Event__c WHERE Id = :eventId];
             evt.Approval_Status__c = 'Rejected';
             evt.Event_Status__c = 'Draft';
@@ -89,6 +112,11 @@ public with sharing class BudgetApprovalController {
             AND (Approval_Status__c = null OR Approval_Status__c = 'Rejected')
             ORDER BY Start_Date__c ASC
         ];
+    }
+    
+    @AuraEnabled(cacheable=true)
+    public static Boolean checkFinanceAccess() {
+        return hasFinancePermission();
     }
     
     public class ApprovalResult {

@@ -1,3 +1,54 @@
 :host {
-    display: block;
+    --primary: #6366f1;
+    --success: #10b981;
+    --error: #ef4444;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-600: #4b5563;
+    --gray-800: #1f2937;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
+.approval-container { max-width: 800px; margin: 0 auto; padding: 2rem; }
+.approval-header { text-align: center; margin-bottom: 2rem; }
+.approval-header h1 { font-size: 2rem; font-weight: 800; color: var(--gray-800); margin: 0; }
+.approval-header p { color: var(--gray-600); }
+.section { margin-bottom: 2rem; }
+.section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--gray-800); }
+.approval-list { display: flex; flex-direction: column; gap: 0.8rem; }
+.approval-card {
+    display: flex; justify-content: space-between; align-items: center;
+    background: white; border: 1px solid var(--gray-200); border-radius: 10px;
+    padding: 1rem 1.5rem;
+}
+.approval-card.draft { border-left: 4px solid var(--primary); }
+.card-left h3 { margin: 0; font-size: 1rem; font-weight: 600; }
+.card-type, .card-date { font-size: 0.8rem; color: var(--gray-600); margin-right: 0.5rem; }
+.card-right { display: flex; align-items: center; gap: 1rem; }
+.budget-amount { font-size: 1.1rem; font-weight: 700; color: var(--gray-800); }
+.card-actions { display: flex; gap: 0.5rem; }
+.btn-approve, .btn-reject, .btn-submit {
+    padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem;
+    font-weight: 600; cursor: pointer; border: none;
+}
+.btn-approve { background: #d1fae5; color: #065f46; }
+.btn-approve:hover { background: #a7f3d0; }
+.btn-reject { background: #fee2e2; color: #991b1b; }
+.btn-reject:hover { background: #fecaca; }
+.btn-submit { background: var(--primary); color: white; }
+.btn-submit:hover { background: #4f46e5; }
+.access-denied {
+    text-align: center; padding: 3rem; background: var(--gray-100);
+    border-radius: 12px; margin: 2rem 0;
+}
+.denied-icon { font-size: 2.5rem; }
+.access-denied h3 { margin: 0.5rem 0; }
+.access-denied p { color: var(--gray-600); }
+.empty-state { text-align: center; padding: 2rem; color: var(--gray-600); }
+.toast {
+    position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600;
+    color: white; z-index: 9999; animation: fadeIn 0.3s;
+}
+.toast-success { background: var(--success); }
+.toast-error { background: var(--error); }
+@keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
