@@ -1,7 +1,10 @@
 public with sharing class RegistrationTriggerHandler {
 
     public void handleBeforeInsert(List<Registration__c> newRegs) {
-        // Set status based on capacity
+        // 1. Credit validation
+        performCreditValidation(newRegs);
+        
+        // 2. Set status based on capacity
         Set<Id> eventIds = new Set<Id>();
         for (Registration__c reg : newRegs) {
             if (reg.Event__c != null) {
@@ -66,6 +69,37 @@ public with sharing class RegistrationTriggerHandler {
                 Integer batchWait = batchWaitlisted.containsKey(reg.Event__c) ? batchWaitlisted.get(reg.Event__c) : 0;
                 reg.Waitlist_Position__c = existingWaitlist + batchWait + 1;
                 batchWaitlisted.put(reg.Event__c, batchWait + 1);
+            }
+        }
+    }
+
+    private void performCreditValidation(List<Registration__c> regs) {
+        // Only validate records that need it
+        List<Registration__c> regsToValidate = new List<Registration__c>();
+        List<Integer> originalIndices = new List<Integer>();
+        
+        for (Integer i = 0; i < regs.size(); i++) {
+            Registration__c reg = regs[i];
+            if (reg.Attendee__c != null && reg.Reg_Amount__c != null && reg.Reg_Amount__c > 0) {
+                regsToValidate.add(reg);
+                originalIndices.add(i);
+            }
+        }
+        
+        if (regsToValidate.isEmpty()) return;
+        
+        Map<Integer, CreditValidationService.ValidationResult> results = 
+            CreditValidationService.validateCreditBulk(regsToValidate);
+        
+        for (Integer i = 0; i < regsToValidate.size(); i++) {
+            CreditValidationService.ValidationResult vr = results.get(i);
+            Registration__c reg = regsToValidate[i];
+            
+            if (vr != null && !vr.isValid) {
+                reg.addError(vr.message);
+            } else if (vr != null) {
+                reg.Credit_Validation_Status__c = 'Passed';
+                reg.Converted_Amount__c = vr.convertedAmount;
             }
         }
     }

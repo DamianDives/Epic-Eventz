@@ -48,6 +48,19 @@ public with sharing class RegistrationController {
             
             Decimal maxCap = evt.Max_Capacity__c != null ? evt.Max_Capacity__c : 0;
             
+            // Credit validation
+            if (regAmount != null && regAmount > 0) {
+                CreditValidationService.ValidationResult creditResult = 
+                    CreditValidationService.validateCredit(attendee.Id, regAmount, 'USD');
+                if (!creditResult.isValid) {
+                    result.success = false;
+                    result.errorMessage = creditResult.message;
+                    return result;
+                }
+                reg.Converted_Amount__c = creditResult.convertedAmount;
+                reg.Credit_Validation_Status__c = 'Passed';
+            }
+            
             if (confirmedCount < maxCap) {
                 reg.Status__c = 'Confirmed';
                 result.status = 'Confirmed';
