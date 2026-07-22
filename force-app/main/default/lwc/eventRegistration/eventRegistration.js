@@ -1,8 +1,10 @@
 import { LightningElement, wire, track } from 'lwc';
+import isGuest from '@salesforce/user/isGuest';
 import getPublishedEvents from '@salesforce/apex/RegistrationController.getPublishedEvents';
 import registerForEvent from '@salesforce/apex/RegistrationController.registerForEvent';
 
 export default class EventRegistration extends LightningElement {
+    isGuestUser = isGuest;
     @track currentStep = 1;
     @track events = [];
     @track selectedEventId = null;
@@ -101,7 +103,19 @@ export default class EventRegistration extends LightningElement {
     handleAmountChange(event) { this.regAmount = event.target.value; }
 
     goToStep1() { this.currentStep = 1; }
-    goToStep2() { if (this.selectedEventId) this.currentStep = 2; }
+    goToStep2() {
+        if (!this.selectedEventId) return;
+        // If guest user, redirect to login page
+        if (this.isGuestUser) {
+            const currentPath = window.location.pathname;
+            const basePath = currentPath.substring(0, currentPath.indexOf('/s/') + 3);
+            const loginUrl = basePath + 'login?startURL=' +
+                encodeURIComponent(currentPath + '?eventId=' + this.selectedEventId);
+            window.location.href = loginUrl;
+            return;
+        }
+        this.currentStep = 2;
+    }
 
     async handleRegister() {
         if (!this.attendeeName || !this.email || !this.regAmount) return;
