@@ -57,13 +57,17 @@ public without sharing class MyRegistrationsController {
             
             // Set to Cancelled — this triggers the after update handler
             // which enqueues PromoteWaitlistJob if it was Confirmed
+            String previousStatus = reg.Status__c;
             reg.Status__c = 'Cancelled';
             update reg;
+            
+            // Send cancellation email
+            RegistrationEmailService.sendCancellationEmail(new List<Registration__c>{reg});
             
             result.success = true;
             result.message = 'Registration cancelled successfully.';
             
-            if (reg.Status__c == 'Confirmed') {
+            if (previousStatus == 'Confirmed') {
                 result.message += ' The next person on the waitlist will be notified.';
             }
             
