@@ -757,3 +757,136 @@ These are things that cannot be deployed via metadata/CLI and require clicking i
 | 10 | `d8de695` | Redesign homepage: editorial split-hero layout, coral/teal palette | Complete rewrite — original design |
 | 11 | `6e1a6f1` | Fix MIXED_DML_OPERATION in self-registration | Reordered DML, added contact reuse |
 | 12 | `95e3551` | Fix login redirect: native form POST instead of Apex Site.login() | Replaced login with HTML form submit |
+
+## 17. Current State — What Exists Right Now
+
+### All Apex Classes (13 production + 5 test)
+
+| # | Class | Type | Purpose |
+|---|---|---|---|
+| 1 | `EventTriggerHandler` | Handler | Venue double-booking prevention (before insert/update on Event__c) |
+| 2 | `RegistrationTriggerHandler` | Handler | Credit validation + capacity/waitlist on insert; cancel-detection + promotion on update |
+| 3 | `CreditValidationService` | Service | Multi-currency credit limit checking. Reusable from trigger, controller, or REST API |
+| 4 | `PromoteWaitlistJob` | Queueable | Async: promotes top waitlisted registration when a Confirmed one is cancelled |
+| 5 | `RegistrationEmailService` | Service | Sends promotion email to newly-confirmed attendee |
+| 6 | `RegistrationService` | Invocable | Bulk registration via @InvocableMethod (for Flows/APIs) |
+| 7 | `RegistrationController` | LWC Controller | Internal registration wizard: getPublishedEvents, registerForEvent |
+| 8 | `RegistrationGuestController` | LWC Controller | Same as above, `without sharing` — for community/guest users |
+| 9 | `BudgetApprovalController` | LWC Controller | Submit/Approve/Reject budgets. Finance-role-gated |
+| 10 | `SelfRegistrationController` | LWC Controller | User signup via Site.createExternalUser. Creates Contact + Attendee + User |
+| 11 | `MyRegistrationsController` | LWC Controller | Get user's registrations, cancel registration |
+| T1 | `EventTriggerHandlerTest` | Test | 5 methods |
+| T2 | `RegistrationTriggerHandlerTest` | Test | 5 methods |
+| T3 | `RegistrationControllerTest` | Test | 4 methods |
+| T4 | `BudgetApprovalControllerTest` | Test | 6 methods |
+| T5 | `CreditValidationServiceTest` | Test | 10 methods |
+
+### All Triggers (2)
+
+| Trigger | Object | Events |
+|---|---|---|
+| `EventTrigger` | Event__c | before insert, before update |
+| `RegistrationTrigger` | Registration__c | before insert, after update |
+
+### All LWC Components (6)
+
+| # | Component | Where It's Used | What It Does |
+|---|---|---|---|
+| 1 | `epicHomePage` | LWR site home page | Landing page with hero, filterable event grid, timeline, login redirect |
+| 2 | `eventRegistration` | Internal Lightning page OR LWR authenticated pages | 3-step registration wizard (select event → details → confirmation) |
+| 3 | `eventRegistrationPublic` | LWR site (public page) | Event cards with "Register Now" buttons that redirect to login |
+| 4 | `selfRegistration` | LWR site login page | Login form (native POST) + Signup form (Apex call) |
+| 5 | `myRegistrations` | LWR site (authenticated) | Shows user's bookings, cancel button with modal + auto-refresh |
+| 6 | `budgetApproval` | Internal Lightning page | Finance approval queue with submit/approve/reject |
+
+### Permission Sets (2)
+
+| Name | Who | Grants |
+|---|---|---|
+| `EpicEventz_Admin` | Admins, event managers | Full CRUD all objects + all fields |
+| `EpicEventz_Finance` | Finance team only | Budget, Approved_Budget, Credit_Limit fields + ability to approve/reject |
+
+### Page Layouts (4)
+
+Venue Layout, Event Layout, Attendee Layout, Registration Layout — all with proper field groupings.
+
+### Custom Tabs (4) + Lightning App (1)
+
+Tabs for all 4 objects. "EpicEventz" app in App Launcher bundles them.
+
+---
+
+## 18. What YOU Still Need To Do Manually
+
+These are things that **cannot be deployed via Salesforce CLI** and require manual Setup/Experience Builder work:
+
+### 18.1 Experience Cloud Site (already done partially)
+
+- [x] Enable Digital Experiences (Setup → Digital Experiences → Settings)
+- [x] Create LWR site (you did this — "EPIC EVENTS", prefix `epiceventsvforcesite`)
+- [x] Publish the site (you just did this — changed from UnderConstruction to Live)
+
+### 18.2 Place Components on Site Pages (Experience Builder)
+
+| Page | Drag This Component Onto It |
+|---|---|
+| **Home page** | `EpicEventz Home Page` (epicHomePage) |
+| **Login page** | `Self Registration` (selfRegistration) |
+| **A new page called "Register"** | `Event Registration` (eventRegistration) — set access to "Requires Authentication" |
+| **A new page called "My Registrations"** | `My Registrations` (myRegistrations) — set access to "Requires Authentication" |
+
+Then **Publish** the site again after placing components.
+
+### 18.3 Guest User Profile — Apex Class Access
+
+Setup → Profiles → find your site's Guest User profile → Enabled Apex Class Access → add:
+- `RegistrationGuestController`
+- `SelfRegistrationController`
+- `MyRegistrationsController`
+
+### 18.4 Guest User Profile — Object Permissions
+
+Still in the Guest User profile:
+- Event__c: Read ✅
+- Venue__c: Read ✅
+- Attendee__c: Read, Create, Edit ✅
+- Registration__c: Read, Create ✅
+
+Plus Field-Level Security: make all custom fields Visible on those objects.
+
+### 18.5 Self-Registration Settings
+
+Setup → Digital Experiences → your site → Administration → Login & Registration:
+- ✅ Allow external users to self-register
+- Profile: Customer Community User (or whichever community profile your site uses)
+- Default Account: `EpicEventz Community` (already exists in the org)
+
+### 18.6 Assign Permission Sets to Users
+
+- Assign `EpicEventz_Admin` to yourself (epicevents@gmail.com) — already done.
+- Assign `EpicEventz_Finance` to any user who needs to see/approve budgets.
+
+---
+
+## 19. Every Git Commit, In Order
+
+| # | Hash | Message | What It Contained |
+|---|---|---|---|
+| 1 | `71156d5` | Phase 1-3: Core schema, Registration+Waitlist LWC, Budget Approval governance | 102 files: all 4 objects, fields, triggers, handlers, tests, LWCs, permission sets, app, tabs, layouts, seed data |
+| 2 | `3b7eb40` | Phase 4: Credit Validation Service with multi-currency conversion | CreditValidationService + test, RegistrationTriggerHandler updated, RegistrationController updated |
+| 3 | `261065d` | Major overhaul: aesthetic LWC redesign, page layouts, tabs, app, public registration, role-based approval | 23 files: new layouts, tabs, app, RegistrationGuestController, eventRegistrationPublic LWC, LWC redesign |
+| 4 | `208b567` | Add complete project reference documentation | docs/COMPLETE_REFERENCE.md |
+| 5 | `e85f580` | Add self-registration LWC with login/signup for LWR site users | SelfRegistrationController + selfRegistration LWC |
+| 6 | `1d9e7ff` | Add My Registrations LWC with cancel + waitlist promotion, fix public component redirect to login | MyRegistrationsController + myRegistrations LWC + eventRegistrationPublic rebuilt |
+| 7 | `db83a8e` | Add complete LWR Site Implementation documentation | docs/LWR_Site_Implementation.md |
+| 8 | `c86a261` | Fix: eventRegistration now redirects guest users to login before allowing registration | JS change: isGuest check in goToStep2() |
+| 9 | `b3d287c` | Add epicHomePage LWC - full landing page (v1, too similar to reference) | epicHomePage first version |
+| 10 | `d8de695` | Redesign homepage: editorial split-hero, coral/teal, filterable grid (v2, original design) | epicHomePage rewritten completely |
+| 11 | `6e1a6f1` | Fix MIXED_DML_OPERATION in self-registration; surface real login errors | SelfRegistrationController reordered DML |
+| 12 | `95e3551` | Fix login redirect bug: use native form POST to site login servlet | selfRegistration LWC: form POST replaces Apex login; loginUser method removed |
+
+---
+
+## 20. How the Full System Works (One Paragraph)
+
+A guest visits the LWR site, sees events on the homepage (pulled live from Salesforce). They click "Register Now" or "Lock in a spot" on any event → redirected to the login page because `isGuest=true`. They create an account (Contact + Attendee + User created) or log in (native form POST to Salesforce's login servlet). After authentication, they're sent back and can complete registration (3-step wizard: select → details → confirm). The system checks their credit limit (multi-currency converted) and event capacity — they're either Confirmed or Waitlisted with a position number. If someone cancels a Confirmed registration, the trigger detects it, enqueues an async Queueable job that promotes the #1 waitlisted person to Confirmed and sends them a notification email. Finance users with the `EpicEventz_Finance` permission set can approve high-budget events via the Budget Approval LWC; events under $10k auto-approve. All of this is source-controlled in Git and deployable via a single `sf project deploy start --source-dir force-app` command.
