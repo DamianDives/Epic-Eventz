@@ -1,10 +1,10 @@
 import { LightningElement, wire, track } from 'lwc';
-import isGuest from '@salesforce/user/isGuest';
 import getPublishedEvents from '@salesforce/apex/RegistrationController.getPublishedEvents';
 import registerForEvent from '@salesforce/apex/RegistrationController.registerForEvent';
+import Id from '@salesforce/user/Id';
 
 export default class EventRegistration extends LightningElement {
-    isGuestUser = isGuest;
+    currentUserId = Id;
     @track currentStep = 1;
     @track events = [];
     @track selectedEventId = null;
@@ -105,13 +105,12 @@ export default class EventRegistration extends LightningElement {
     goToStep1() { this.currentStep = 1; }
     goToStep2() {
         if (!this.selectedEventId) return;
-        // If guest user, redirect to login page
-        if (this.isGuestUser) {
+        // If no user ID, user is a guest — redirect to login
+        if (!this.currentUserId) {
             const currentPath = window.location.pathname;
-            const basePath = currentPath.substring(0, currentPath.indexOf('/s/') + 3);
-            const loginUrl = basePath + 'login?startURL=' +
+            const loginPath = currentPath.replace(/\/s\/.*$/, '/s/login');
+            window.location.href = loginPath + '?startURL=' +
                 encodeURIComponent(currentPath + '?eventId=' + this.selectedEventId);
-            window.location.href = loginUrl;
             return;
         }
         this.currentStep = 2;

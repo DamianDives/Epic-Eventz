@@ -1,10 +1,10 @@
 import { LightningElement, wire, track } from 'lwc';
-import { NavigationMixin } from 'lightning/navigation';
-import isGuest from '@salesforce/user/isGuest';
+import Id from '@salesforce/user/Id';
 import getPublishedEvents from '@salesforce/apex/RegistrationGuestController.getPublishedEvents';
 
-export default class EventRegistrationPublic extends NavigationMixin(LightningElement) {
+export default class EventRegistrationPublic extends LightningElement {
     @track events = [];
+    currentUserId = Id;
 
     get hasEvents() { return this.events && this.events.length > 0; }
 
@@ -41,24 +41,11 @@ export default class EventRegistrationPublic extends NavigationMixin(LightningEl
     handleRegisterClick(event) {
         event.stopPropagation();
         const eventId = event.currentTarget.dataset.id;
-
-        if (isGuest) {
-            // Not logged in — redirect to login page with return URL
-            const currentUrl = window.location.pathname;
-            const loginUrl = currentUrl.replace(/\/s\/.*/, '/s/login');
-            window.location.href = loginUrl + '?startURL=' +
-                encodeURIComponent(currentUrl + '?eventId=' + eventId);
-        } else {
-            // Logged in — navigate to registration page or show form
-            this[NavigationMixin.Navigate]({
-                type: 'comm__namedPage',
-                attributes: {
-                    name: 'Register__c'
-                },
-                state: {
-                    eventId: eventId
-                }
-            });
-        }
+        // Always redirect to login — if already logged in, login page
+        // will auto-redirect to startURL; if not, they'll sign in first
+        const currentUrl = window.location.pathname;
+        const loginPath = currentUrl.replace(/\/s\/.*$/, '/s/login');
+        window.location.href = loginPath + '?startURL=' +
+            encodeURIComponent(currentUrl + '?eventId=' + eventId);
     }
 }
