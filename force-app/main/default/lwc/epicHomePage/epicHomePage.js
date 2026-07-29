@@ -1,9 +1,11 @@
 import { LightningElement, wire, track } from 'lwc';
+import Id from '@salesforce/user/Id';
 import getPublishedEvents from '@salesforce/apex/RegistrationGuestController.getPublishedEvents';
 
 export default class EpicHomePage extends LightningElement {
     @track allEvents = [];
     @track activeFilter = 'All';
+    currentUserId = Id;
 
     get eventCount() { return this.allEvents.length; }
     get heroPreview() { return this.allEvents.length > 0 ? this.allEvents[0] : null; }
@@ -46,6 +48,19 @@ export default class EpicHomePage extends LightningElement {
 
     handleFilterClick(event) {
         this.activeFilter = event.currentTarget.dataset.value;
+    }
+
+    handleEventTileClick(event) {
+        const eventId = event.currentTarget.dataset.id;
+        const basePath = window.location.pathname.replace(/\/s\/.*/, '/s/');
+        if (!this.currentUserId) {
+            // Not logged in — redirect to login
+            window.location.href = basePath + 'login?startURL=' +
+                encodeURIComponent(basePath + '?eventId=' + eventId);
+        } else {
+            // Logged in — go to events/registration page
+            window.location.href = basePath + '?eventId=' + eventId;
+        }
     }
 
     scrollToEvents() {

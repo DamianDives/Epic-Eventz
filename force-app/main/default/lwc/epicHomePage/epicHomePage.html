@@ -54,7 +54,8 @@
             <template if:true={hasFilteredEvents}>
                 <div class="masonry">
                     <template for:each={filteredEvents} for:item="evt">
-                        <article key={evt.Id} class="event-tile">
+                        <article key={evt.Id} class="event-tile" data-id={evt.Id}
+                                 onclick={handleEventTileClick}>
                             <div class="tile-top">
                                 <span class="tile-type">{evt.Event_Type__c}</span>
                                 <span class="tile-seats">{evt.seatsInfo}</span>
