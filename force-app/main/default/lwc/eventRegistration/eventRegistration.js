@@ -61,7 +61,7 @@ export default class EventRegistration extends LightningElement {
     get hasEvents() { return this.events && this.events.length > 0; }
     get isNextDisabled() { return !this.selectedEventId; }
     get isRegisterDisabled() {
-        return !this.attendeeName || !this.email || !this.regAmount || this.isLoading;
+        return !this.attendeeName || !this.email || this.isLoading;
     }
     get isWaitlisted() { return this.resultStatus === 'Waitlisted'; }
 
@@ -117,7 +117,7 @@ export default class EventRegistration extends LightningElement {
     }
 
     async handleRegister() {
-        if (!this.attendeeName || !this.email || !this.regAmount) return;
+        if (!this.attendeeName || !this.email) return;
         this.isLoading = true;
         try {
             const result = await registerForEvent({
@@ -126,7 +126,7 @@ export default class EventRegistration extends LightningElement {
                 email: this.email,
                 phone: this.phone,
                 company: this.company,
-                regAmount: parseFloat(this.regAmount)
+                regAmount: 0
             });
             if (result.success) {
                 this.registrationSuccess = true;
