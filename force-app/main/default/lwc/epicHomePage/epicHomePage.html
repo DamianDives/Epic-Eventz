@@ -1,15 +1,5 @@
 <template>
     <div class="page">
-        <!-- STICKY NAV -->
-        <nav class="navbar">
-            <span class="nav-logo">EE<span class="nav-dot">.</span></span>
-            <div class="nav-links">
-                <span class="nav-link" onclick={scrollToEvents}>Events</span>
-                <span class="nav-link" onclick={scrollToAbout}>About</span>
-            </div>
-            <button class="nav-signin" onclick={goToLogin}>Member Login</button>
-        </nav>
-
         <!-- SPLIT HERO -->
         <div class="hero">
             <div class="hero-left">
@@ -64,8 +54,7 @@
             <template if:true={hasFilteredEvents}>
                 <div class="masonry">
                     <template for:each={filteredEvents} for:item="evt">
-                        <article key={evt.Id} class="event-tile" data-id={evt.Id}
-                                 onclick={handleEventTileClick}>
+                        <article key={evt.Id} class="event-tile">
                             <div class="tile-top">
                                 <span class="tile-type">{evt.Event_Type__c}</span>
                                 <span class="tile-seats">{evt.seatsInfo}</span>
@@ -73,7 +62,6 @@
                             <h3 class="tile-name">{evt.Name}</h3>
                             <p class="tile-date">{evt.formattedDate}</p>
                             <p class="tile-venue">{evt.venueName}</p>
-                            <span class="tile-cta">Lock in a spot ↗</span>
                         </article>
                     </template>
                 </div>
@@ -113,7 +101,6 @@
         <!-- CLOSING BANNER -->
         <div class="closing">
             <h2>Your next event is one click away.</h2>
-            <button class="btn-coral-outline" onclick={goToLogin}>Get started →</button>
         </div>
     </div>
 </template>

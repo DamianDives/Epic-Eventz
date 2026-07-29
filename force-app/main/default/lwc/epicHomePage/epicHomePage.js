@@ -48,18 +48,6 @@ export default class EpicHomePage extends LightningElement {
         this.activeFilter = event.currentTarget.dataset.value;
     }
 
-    handleEventTileClick(event) {
-        const eventId = event.currentTarget.dataset.id;
-        const basePath = window.location.pathname.replace(/\/s\/.*/, '/s/');
-        window.location.href = basePath + 'login?startURL=' +
-            encodeURIComponent(basePath + '?eventId=' + eventId);
-    }
-
-    goToLogin() {
-        const basePath = window.location.pathname.replace(/\/s\/.*/, '/s/');
-        window.location.href = basePath + 'login';
-    }
-
     scrollToEvents() {
         const el = this.template.querySelector('[data-id="events-anchor"]');
         if (el) el.scrollIntoView({ behavior: 'smooth' });
