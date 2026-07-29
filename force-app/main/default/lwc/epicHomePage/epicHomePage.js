@@ -9,7 +9,7 @@ export default class EpicHomePage extends LightningElement {
     get heroPreview() { return this.allEvents.length > 0 ? this.allEvents[0] : null; }
 
     get typeFilters() {
-        const types = ['All', ...new Set(this.allEvents.map(e => e.Event_Type__c).filter(Boolean))];
+        const types = ['All', ...new Set(this.allEvents.map(e => e.eventType).filter(Boolean))];
         return types.map(t => ({
             value: t,
             label: t,
@@ -19,7 +19,7 @@ export default class EpicHomePage extends LightningElement {
 
     get filteredEvents() {
         if (this.activeFilter === 'All') return this.allEvents;
-        return this.allEvents.filter(e => e.Event_Type__c === this.activeFilter);
+        return this.allEvents.filter(e => e.eventType === this.activeFilter);
     }
     get hasFilteredEvents() { return this.filteredEvents.length > 0; }
 
@@ -28,10 +28,9 @@ export default class EpicHomePage extends LightningElement {
         if (data) {
             this.allEvents = data.map(evt => ({
                 ...evt,
-                venueName: evt.Venue__r
-                    ? `${evt.Venue__r.City__c}, ${evt.Venue__r.State__c}` : 'Location TBD',
-                formattedDate: this.formatDate(evt.Start_Date__c),
-                seatsInfo: evt.Max_Capacity__c ? `${evt.Max_Capacity__c} spots` : 'Open'
+                venueName: evt.venueName || 'Location TBD',
+                formattedDate: this.formatDate(evt.startDate),
+                seatsInfo: evt.seatsRemaining != null ? `${evt.seatsRemaining} spots` : 'Open'
             }));
         } else if (error) {
             console.error(error);

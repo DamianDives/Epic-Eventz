@@ -26,12 +26,12 @@ export default class EventRegistration extends LightningElement {
         if (data) {
             this.events = data.map(evt => ({
                 ...evt,
-                venueName: evt.Venue__r
-                    ? `${evt.Venue__r.City__c}, ${evt.Venue__r.State__c}`
-                    : 'Location TBD',
-                formattedDate: this.formatDate(evt.Start_Date__c, evt.End_Date__c),
-                seatsInfo: evt.Max_Capacity__c
-                    ? `${evt.Max_Capacity__c} seats` : 'Unlimited',
+                venueName: evt.venueName || 'Location TBD',
+                formattedDate: this.formatDate(evt.startDate, evt.endDate),
+                seatsInfo: evt.seatsRemaining != null
+                    ? `${evt.seatsRemaining} seats left` : 'Unlimited',
+                priceInfo: evt.eventPrice
+                    ? `$${evt.eventPrice}` : 'Free',
                 isSelected: false,
                 cardClass: 'event-card'
             }));
@@ -119,6 +119,9 @@ export default class EventRegistration extends LightningElement {
     async handleRegister() {
         if (!this.attendeeName || !this.email) return;
         this.isLoading = true;
+        // Get the event price from the selected event
+        const selectedEvent = this.events.find(e => e.Id === this.selectedEventId);
+        const eventPrice = selectedEvent && selectedEvent.eventPrice ? selectedEvent.eventPrice : 0;
         try {
             const result = await registerForEvent({
                 eventId: this.selectedEventId,
@@ -126,7 +129,7 @@ export default class EventRegistration extends LightningElement {
                 email: this.email,
                 phone: this.phone,
                 company: this.company,
-                regAmount: 0
+                regAmount: eventPrice
             });
             if (result.success) {
                 this.registrationSuccess = true;

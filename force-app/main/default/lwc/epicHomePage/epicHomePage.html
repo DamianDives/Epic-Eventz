@@ -28,7 +28,7 @@
             <div class="hero-right">
                 <template if:true={heroPreview}>
                     <div class="stack-card stack-card-1">
-                        <span class="stack-tag">{heroPreview.Event_Type__c}</span>
+                        <span class="stack-tag">{heroPreview.eventType}</span>
                         <h4>{heroPreview.Name}</h4>
                         <p>{heroPreview.venueName}</p>
                     </div>
@@ -67,7 +67,7 @@
                         <article key={evt.Id} class="event-tile" data-id={evt.Id}
                                  onclick={handleEventTileClick}>
                             <div class="tile-top">
-                                <span class="tile-type">{evt.Event_Type__c}</span>
+                                <span class="tile-type">{evt.eventType}</span>
                                 <span class="tile-seats">{evt.seatsInfo}</span>
                             </div>
                             <h3 class="tile-name">{evt.Name}</h3>
