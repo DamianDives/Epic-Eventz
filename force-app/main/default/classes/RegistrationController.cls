@@ -30,7 +30,7 @@ public without sharing class RegistrationController {
                     Phone__c = phone,
                     Company__c = company
                 );
-                insert attendee;
+                Database.insert(attendee, AccessLevel.SYSTEM_MODE);
             }
             
             // Check capacity
@@ -71,7 +71,7 @@ public without sharing class RegistrationController {
                 result.waitlistPosition = waitlistCount + 1;
             }
             
-            insert reg;
+            Database.insert(reg, AccessLevel.SYSTEM_MODE);
             result.registrationId = reg.Id;
             result.success = true;
             result.regNumber = [SELECT Name FROM Registration__c WHERE Id = :reg.Id].Name;
