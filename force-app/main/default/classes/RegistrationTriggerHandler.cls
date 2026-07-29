@@ -1,4 +1,4 @@
-public with sharing class RegistrationTriggerHandler {
+public without sharing class RegistrationTriggerHandler {
 
     public void handleBeforeInsert(List<Registration__c> newRegs) {
         // 1. Credit validation

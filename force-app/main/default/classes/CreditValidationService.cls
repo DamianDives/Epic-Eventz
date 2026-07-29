@@ -1,4 +1,4 @@
-public with sharing class CreditValidationService {
+public without sharing class CreditValidationService {
     
     // Currency conversion rates to USD (base currency)
     private static final Map<String, Decimal> CONVERSION_RATES = new Map<String, Decimal>{
